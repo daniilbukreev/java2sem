@@ -1,0 +1,10 @@
+logging:
+  level:
+    com.example.todolist: INFO
+    root: WARN
+
+server:
+  port: 80 # Standard HTTP port for production
+
+app:
+  name: To-Do List Manager (Production)
