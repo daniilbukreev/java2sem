@@ -1,6 +1,6 @@
-package com.example.todolist.repository;
+package com.mipt.daniilbukreev.repository;
 
-import com.example.todolist.model.Task;
+import com.mipt.daniilbukreev.model.Task;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 

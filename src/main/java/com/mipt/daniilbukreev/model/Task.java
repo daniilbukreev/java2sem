@@ -1,4 +1,4 @@
-package com.example.todolist.model;
+package com.mipt.daniilbukreev.model;
 
 import java.util.Objects;
 
