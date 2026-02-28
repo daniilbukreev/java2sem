@@ -1,0 +1,6 @@
+logging:
+  level:
+    com.example.todolist: DEBUG
+
+server:
+  port: 8082 # Different port for dev to avoid conflicts
