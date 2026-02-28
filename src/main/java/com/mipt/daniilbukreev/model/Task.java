@@ -11,6 +11,9 @@ public class Task {
     private String description;
     private boolean completed;
 
+    public Task() {
+    }
+
     public Task(Long id, String title, String description, boolean completed) {
         this.id = id;
         this.title = title;
