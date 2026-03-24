@@ -1,163 +1,175 @@
 package com.mipt.daniilbukreev.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mipt.daniilbukreev.dto.TaskCreateDto;
+import com.mipt.daniilbukreev.dto.TaskResponseDto;
+import com.mipt.daniilbukreev.dto.TaskUpdateDto;
+import com.mipt.daniilbukreev.mapper.TaskMapper;
+import com.mipt.daniilbukreev.model.Priority;
 import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.service.TaskService;
+import com.mipt.daniilbukreev.validation.OnCreate;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import java.util.Collections;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Tests for the {@link TaskController}.
- * These tests use a {@link TestRestTemplate} to send real HTTP requests
- * and a mock {@link TaskService} to isolate the controller logic.
- */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(properties = "app.upload-dir=./target/uploads-test")
 public class TaskControllerTest {
 
+    private MockMvc mockMvc;
+
     @Autowired
-    private TestRestTemplate restTemplate;
+    private WebApplicationContext webApplicationContext;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockBean
     private TaskService taskService;
 
+    @MockBean
+    private TaskMapper taskMapper;
 
-    @Test
-    void getAllTasks_Positive_ReturnsListOfTasks() {
-        List<Task> tasks = List.of(new Task(1L, "Task 1", "Desc 1", false));
-        when(taskService.getAllTasks()).thenReturn(tasks);
+    @BeforeEach
+    public void setup() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
 
-        ResponseEntity<Task[]> response = restTemplate.getForEntity("/api/tasks", Task[].class);
+    private Task createTask(Long id, String title) {
+        return new Task(id, title, "Desc", false, LocalDateTime.now(), LocalDate.now().plusDays(1), Priority.MEDIUM, Set.of("test"));
+    }
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).hasSize(1);
-        assertThat(response.getBody()[0].getTitle()).isEqualTo("Task 1");
+    private TaskResponseDto createTaskResponseDto(Long id, String title) {
+        TaskResponseDto dto = new TaskResponseDto();
+        dto.setId(id);
+        dto.setTitle(title);
+        return dto;
     }
 
     @Test
-    void getAllTasks_Negative_ReturnsEmptyList() {
-        when(taskService.getAllTasks()).thenReturn(Collections.emptyList());
+    void getAllTasks_ShouldReturnListOfTasks() throws Exception {
+        List<Task> tasks = List.of(createTask(1L, "Task 1"));
+        given(taskService.getAllTasks()).willReturn(tasks);
+        given(taskMapper.toResponseDto(any(Task.class))).willReturn(createTaskResponseDto(1L, "Task 1"));
 
-        ResponseEntity<Task[]> response = restTemplate.getForEntity("/api/tasks", Task[].class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).isEmpty();
-    }
-
-
-    @Test
-    void getTaskById_Positive_ReturnsTask() {
-        Task task = new Task(1L, "Test Task", "Test Desc", false);
-        when(taskService.getTaskById(1L)).thenReturn(Optional.of(task));
-
-        ResponseEntity<Task> response = restTemplate.getForEntity("/api/tasks/1", Task.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getId()).isEqualTo(1L);
+        mockMvc.perform(get("/api/tasks"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("Task 1")));
     }
 
     @Test
-    void getTaskById_Negative_NotFound() {
-        when(taskService.getTaskById(99L)).thenReturn(Optional.empty());
+    void getTaskById_WhenTaskExists_ShouldReturnTask() throws Exception {
+        Task task = createTask(1L, "Test Task");
+        given(taskService.getTaskById(1L)).willReturn(Optional.of(task));
+        given(taskMapper.toResponseDto(task)).willReturn(createTaskResponseDto(1L, "Test Task"));
 
-        ResponseEntity<Task> response = restTemplate.getForEntity("/api/tasks/99", Task.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-
-    @Test
-    void createTask_Positive_ReturnsCreatedTask() {
-        Task taskToCreate = new Task(null, "New Task", "New Desc", false);
-        Task createdTask = new Task(1L, "New Task", "New Desc", false);
-        when(taskService.createTask(any(Task.class))).thenReturn(createdTask);
-
-        ResponseEntity<Task> response = restTemplate.postForEntity("/api/tasks", taskToCreate, Task.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getId()).isEqualTo(1L);
+        mockMvc.perform(get("/api/tasks/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)));
     }
 
     @Test
-    void createTask_Negative_ServerError() {
-        Task taskToCreate = new Task(null, "New Task", "New Desc", false);
-        when(taskService.createTask(any(Task.class))).thenThrow(new IllegalArgumentException("Invalid data"));
-        ResponseEntity<Void> response = restTemplate.postForEntity("/api/tasks", taskToCreate, Void.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-
-    @Test
-    void updateTask_Positive_ReturnsUpdatedTask() {
-        Task taskToUpdate = new Task(1L, "Updated Task", "Updated Desc", true);
-        when(taskService.updateTask(any(Task.class))).thenReturn(taskToUpdate);
-
-        HttpEntity<Task> requestEntity = new HttpEntity<>(taskToUpdate);
-        ResponseEntity<Task> response = restTemplate.exchange("/api/tasks/1", HttpMethod.PUT, requestEntity, Task.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getTitle()).isEqualTo("Updated Task");
+    void getTaskById_WhenTaskDoesNotExist_ShouldReturnNotFound() throws Exception {
+        given(taskService.getTaskById(99L)).willReturn(Optional.empty());
+        mockMvc.perform(get("/api/tasks/99"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void updateTask_Negative_NotFound() {
-        Task taskToUpdate = new Task(99L, "Non-existent Task", "Desc", false);
-        when(taskService.updateTask(any(Task.class))).thenThrow(new RuntimeException("Task not found"));
+    void createTask_WithValidData_ShouldReturnCreatedTask() throws Exception {
+        TaskCreateDto taskDto = new TaskCreateDto();
+        taskDto.setTitle("New Task");
+        taskDto.setPriority(Priority.HIGH);
+        taskDto.setDueDate(LocalDate.now().plusDays(1));
 
-        HttpEntity<Task> requestEntity = new HttpEntity<>(taskToUpdate);
-        ResponseEntity<Void> response = restTemplate.exchange("/api/tasks/99", HttpMethod.PUT, requestEntity, Void.class);
+        Task createdTask = createTask(1L, "New Task");
+        TaskResponseDto responseDto = createTaskResponseDto(1L, "New Task");
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        given(taskMapper.toEntity(any(TaskCreateDto.class))).willReturn(new Task());
+        given(taskService.createTask(any(Task.class))).willReturn(createdTask);
+        given(taskMapper.toResponseDto(createdTask)).willReturn(responseDto);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(taskDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(1)));
     }
 
+    @Test
+    void createTask_WithInvalidTitle_ShouldReturnBadRequest() throws Exception {
+        TaskCreateDto taskDto = new TaskCreateDto();
+        taskDto.setTitle("T");
+        taskDto.setPriority(Priority.HIGH);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(taskDto))
+                        .requestAttr("validationGroups", OnCreate.class))
+                .andExpect(status().isBadRequest());
+    }
 
     @Test
-    void deleteTask_Positive_ReturnsNoContent() {
+    void createTask_WithPastDueDate_ShouldReturnBadRequest() throws Exception {
+        TaskCreateDto taskDto = new TaskCreateDto();
+        taskDto.setTitle("A valid title");
+        taskDto.setPriority(Priority.HIGH);
+        taskDto.setDueDate(LocalDate.now().minusDays(1));
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(taskDto))
+                        .requestAttr("validationGroups", OnCreate.class))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateTask_WithValidData_ShouldReturnUpdatedTask() throws Exception {
+        TaskUpdateDto taskDto = new TaskUpdateDto();
+        taskDto.setTitle("Updated Title");
+
+        Task existingTask = createTask(1L, "Old Title");
+        Task updatedTask = createTask(1L, "Updated Title");
+        TaskResponseDto responseDto = createTaskResponseDto(1L, "Updated Title");
+
+        given(taskService.getTaskByIdOrThrow(1L)).willReturn(existingTask);
+        given(taskMapper.updateEntity(any(TaskUpdateDto.class), any(Task.class))).willReturn(updatedTask);
+        given(taskService.updateTask(any(Task.class))).willReturn(updatedTask);
+        given(taskMapper.toResponseDto(updatedTask)).willReturn(responseDto);
+        mockMvc.perform(put("/api/tasks/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(taskDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is("Updated Title")));
+    }
+    
+    @Test
+    void deleteTask_WhenTaskExists_ShouldReturnNoContent() throws Exception {
+        given(taskService.getTaskByIdOrThrow(1L)).willReturn(createTask(1L, "Task to delete"));
         doNothing().when(taskService).deleteTask(1L);
 
-        ResponseEntity<Void> response = restTemplate.exchange("/api/tasks/1", HttpMethod.DELETE, null, Void.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
-    void deleteTask_Negative_VerifyTaskIsGone() {
-        doNothing().when(taskService).deleteTask(1L);
-        when(taskService.getTaskById(1L)).thenReturn(Optional.empty());
-
-        restTemplate.delete("/api/tasks/1");
-
-        ResponseEntity<Void> response = restTemplate.getForEntity("/api/tasks/1", Void.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    @Test
-    void getScopeBeans_Positive_ReturnsBeanInfo() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/api/tasks/scopes", String.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).contains("RequestScopedBean");
-        assertThat(response.getBody()).contains("Prototype Bean 1");
-        assertThat(response.getBody()).contains("Prototype Bean 2");
+        mockMvc.perform(delete("/api/tasks/1"))
+                .andExpect(status().isNoContent());
     }
 }
