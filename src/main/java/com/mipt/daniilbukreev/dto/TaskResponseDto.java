@@ -1,19 +1,37 @@
 package com.mipt.daniilbukreev.dto;
 
 import com.mipt.daniilbukreev.model.Priority;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+@Schema(description = "DTO for displaying Task information")
 public class TaskResponseDto {
+    @Schema(description = "Unique identifier of the task", example = "1")
     private Long id;
+
+    @Schema(description = "Title of the task", example = "Buy groceries")
     private String title;
+
+    @Schema(description = "Description of the task", example = "Milk, Eggs, Bread")
     private String description;
+
+    @Schema(description = "Completion status of the task", example = "false")
     private boolean completed;
+
+    @Schema(description = "Date and time when the task was created", example = "2026-03-24T10:00:00")
     private LocalDateTime createdAt;
+
+    @Schema(description = "Due date for the task", example = "2026-04-01")
     private LocalDate dueDate;
+
+    @Schema(description = "Priority of the task", example = "MEDIUM")
     private Priority priority;
+
+    @ArraySchema(schema = @Schema(description = "Tags associated with the task", example = "[\"home\", \"urgent\"]"))
     private Set<String> tags;
 
     public Long getId() {
