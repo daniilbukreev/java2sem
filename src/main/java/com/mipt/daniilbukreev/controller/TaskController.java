@@ -1,14 +1,16 @@
 package com.mipt.daniilbukreev.controller;
 
-import com.mipt.daniilbukreev.beans.PrototypeScopedBean;
-import com.mipt.daniilbukreev.beans.RequestScopedBean;
+import com.mipt.daniilbukreev.dto.TaskCreateDto;
+import com.mipt.daniilbukreev.dto.TaskResponseDto;
+import com.mipt.daniilbukreev.dto.TaskUpdateDto;
+import com.mipt.daniilbukreev.mapper.TaskMapper;
 import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.service.TaskService;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing tasks.
@@ -19,65 +21,55 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
-    private final RequestScopedBean requestScopedBean;
-    private final ObjectProvider<PrototypeScopedBean> prototypeScopedBeanProvider;
-
+    private final TaskMapper taskMapper;
 
     /**
      * Constructs a TaskController with the necessary services and scoped beans.
      * @param taskService The service for task operations.
-     * @param requestScopedBean The request-scoped bean.
-     * @param prototypeScopedBeanProvider The provider for prototype-scoped beans.
+     * @param taskMapper The mapper for converting between Task and DTOs.
      */
-    public TaskController(TaskService taskService, RequestScopedBean requestScopedBean, ObjectProvider<PrototypeScopedBean> prototypeScopedBeanProvider) {
+    public TaskController(TaskService taskService, TaskMapper taskMapper) {
         this.taskService = taskService;
-        this.requestScopedBean = requestScopedBean;
-        this.prototypeScopedBeanProvider = prototypeScopedBeanProvider;
+        this.taskMapper = taskMapper;
     }
 
     @GetMapping
-    public List<Task> getAllTasks() {
-        return taskService.getAllTasks();
+    public List<TaskResponseDto> getAllTasks() {
+        return taskService.getAllTasks().stream()
+                .map(taskMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+    public ResponseEntity<TaskResponseDto> getTaskById(@PathVariable Long id) {
         return taskService.getTaskById(id)
+                .map(taskMapper::toResponseDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Task createTask(@RequestBody Task task) {
-        return taskService.createTask(task);
+    public TaskResponseDto createTask(@RequestBody TaskCreateDto taskDto) {
+        Task task = taskMapper.toEntity(taskDto);
+        Task createdTask = taskService.createTask(task);
+        return taskMapper.toResponseDto(createdTask);
     }
 
     @PutMapping("/{id}")
-    public Task updateTask(@PathVariable Long id, @RequestBody Task task) {
-        task.setId(id);
-        return taskService.updateTask(task);
+    public ResponseEntity<TaskResponseDto> updateTask(@PathVariable Long id, @RequestBody TaskUpdateDto taskDto) {
+        return taskService.getTaskById(id)
+                .map(existingTask -> {
+                    Task updatedTask = taskMapper.updateEntity(taskDto, existingTask);
+                    updatedTask.setId(id);
+                    taskService.updateTask(updatedTask);
+                    return ResponseEntity.ok(taskMapper.toResponseDto(updatedTask));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public void deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
-    }
-
-    /**
-     * Endpoint to demonstrate the behavior of request and prototype scoped beans.
-     * @return a string with information about the beans.
-     */
-    @GetMapping("/scopes")
-    public String getScopeBeans() {
-        String requestBeanInfo = requestScopedBean.getRequestId();
-        PrototypeScopedBean prototype1 = prototypeScopedBeanProvider.getObject();
-        PrototypeScopedBean prototype2 = prototypeScopedBeanProvider.getObject();
-        String prototypeInfo1 = prototype1.generateUniqueTaskId();
-        String prototypeInfo2 = prototype2.generateUniqueTaskId();
-
-        return String.format(
-                "Request Bean: %s <br/> Prototype Bean 1: %s <br/> Prototype Bean 2: %s",
-                requestBeanInfo, prototypeInfo1, prototypeInfo2
-        );
+        return ResponseEntity.noContent().build();
     }
 }
