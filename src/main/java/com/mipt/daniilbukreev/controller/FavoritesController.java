@@ -4,6 +4,7 @@ import com.mipt.daniilbukreev.dto.TaskResponseDto;
 import com.mipt.daniilbukreev.mapper.TaskMapper;
 import com.mipt.daniilbukreev.service.TaskService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,10 @@ public class FavoritesController {
 
     private final TaskService taskService;
     private final TaskMapper taskMapper;
+
+    @Value("${app.version}")
+    private String apiVersion;
+
     private static final String FAVORITES_SESSION_KEY = "favoriteTaskIds";
 
     public FavoritesController(TaskService taskService, TaskMapper taskMapper) {
@@ -26,15 +31,14 @@ public class FavoritesController {
 
     @PostMapping("/{taskId}")
     public ResponseEntity<Void> addToFavorites(@PathVariable Long taskId, HttpSession session) {
-        taskService.getTaskById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found with id: " + taskId));
+        taskService.getTaskByIdOrThrow(taskId);
 
         List<Long> favoriteIds = getFavoriteIds(session);
         if (!favoriteIds.contains(taskId)) {
             favoriteIds.add(taskId);
             session.setAttribute(FAVORITES_SESSION_KEY, favoriteIds);
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().header("X-API-Version", apiVersion).build();
     }
 
     @DeleteMapping("/{taskId}")
@@ -43,7 +47,7 @@ public class FavoritesController {
         if (favoriteIds.remove(taskId)) {
             session.setAttribute(FAVORITES_SESSION_KEY, favoriteIds);
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().header("X-API-Version", apiVersion).build();
     }
 
     @GetMapping
@@ -55,7 +59,7 @@ public class FavoritesController {
                 .map(java.util.Optional::get)
                 .map(taskMapper::toResponseDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(favoriteTasks);
+        return ResponseEntity.ok().header("X-API-Version", apiVersion).body(favoriteTasks);
     }
 
     @SuppressWarnings("unchecked")

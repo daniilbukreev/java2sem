@@ -6,12 +6,15 @@ import com.mipt.daniilbukreev.dto.TaskUpdateDto;
 import com.mipt.daniilbukreev.mapper.TaskMapper;
 import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.service.TaskService;
+import com.mipt.daniilbukreev.exception.TaskNotFoundException;
 import com.mipt.daniilbukreev.validation.OnCreate;
 import com.mipt.daniilbukreev.validation.OnUpdate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +30,9 @@ public class TaskController {
     private final TaskService taskService;
     private final TaskMapper taskMapper;
 
+    @Value("${app.version}")
+    private String apiVersion;
+
     /**
      * Constructs a TaskController with the necessary services and scoped beans.
      * @param taskService The service for task operations.
@@ -38,42 +44,49 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<TaskResponseDto> getAllTasks() {
-        return taskService.getAllTasks().stream()
+    public ResponseEntity<List<TaskResponseDto>> getAllTasks() {
+        List<TaskResponseDto> tasks = taskService.getAllTasks().stream()
                 .map(taskMapper::toResponseDto)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(tasks.size()))
+                .header("X-API-Version", apiVersion)
+                .body(tasks);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponseDto> getTaskById(@PathVariable Long id) {
         return taskService.getTaskById(id)
                 .map(taskMapper::toResponseDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(dto -> ResponseEntity.ok().header("X-API-Version", apiVersion).body(dto))
+                .orElseThrow(() -> new TaskNotFoundException(id));
     }
 
     @PostMapping
-    public TaskResponseDto createTask(@Validated(OnCreate.class) @RequestBody TaskCreateDto taskDto) {
+    public ResponseEntity<TaskResponseDto> createTask(@Validated(OnCreate.class) @RequestBody TaskCreateDto taskDto) {
         Task task = taskMapper.toEntity(taskDto);
         Task createdTask = taskService.createTask(task);
-        return taskMapper.toResponseDto(createdTask);
+        TaskResponseDto responseDto = taskMapper.toResponseDto(createdTask);
+        return ResponseEntity.created(URI.create("/api/tasks/" + responseDto.getId()))
+                .header("X-API-Version", apiVersion)
+                .body(responseDto);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponseDto> updateTask(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody TaskUpdateDto taskDto) {
-        return taskService.getTaskById(id)
-                .map(existingTask -> {
-                    Task updatedTask = taskMapper.updateEntity(taskDto, existingTask);
-                    updatedTask.setId(id);
-                    taskService.updateTask(updatedTask);
-                    return ResponseEntity.ok(taskMapper.toResponseDto(updatedTask));
-                })
-                .orElse(ResponseEntity.notFound().build());
+        Task existingTask = taskService.getTaskByIdOrThrow(id);
+        Task updatedTask = taskMapper.updateEntity(taskDto, existingTask);
+        updatedTask.setId(id);
+        taskService.updateTask(updatedTask);
+        return ResponseEntity.ok()
+                .header("X-API-Version", apiVersion)
+                .body(taskMapper.toResponseDto(updatedTask));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        taskService.getTaskByIdOrThrow(id);
         taskService.deleteTask(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().header("X-API-Version", apiVersion).build();
     }
 }

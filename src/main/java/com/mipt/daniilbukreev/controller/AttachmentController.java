@@ -3,6 +3,7 @@ package com.mipt.daniilbukreev.controller;
 import com.mipt.daniilbukreev.dto.AttachmentResponseDto;
 import com.mipt.daniilbukreev.mapper.AttachmentMapper;
 import com.mipt.daniilbukreev.service.AttachmentService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,6 +21,9 @@ public class AttachmentController {
     private final AttachmentService attachmentService;
     private final AttachmentMapper attachmentMapper;
 
+    @Value("${app.version}")
+    private String apiVersion;
+
     public AttachmentController(AttachmentService attachmentService, AttachmentMapper attachmentMapper) {
         this.attachmentService = attachmentService;
         this.attachmentMapper = attachmentMapper;
@@ -28,10 +32,10 @@ public class AttachmentController {
     @PostMapping("/tasks/{taskId}/attachments")
     public ResponseEntity<AttachmentResponseDto> uploadFile(@PathVariable Long taskId, @RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().header("X-API-Version", apiVersion).build();
         }
         AttachmentResponseDto dto = attachmentMapper.toResponseDto(attachmentService.storeAttachment(taskId, file));
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok().header("X-API-Version", apiVersion).body(dto);
     }
 
     @GetMapping("/attachments/{attachmentId}")
@@ -47,13 +51,14 @@ public class AttachmentController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .header("X-API-Version", apiVersion)
                 .body(resource);
     }
 
     @DeleteMapping("/attachments/{attachmentId}")
     public ResponseEntity<Void> deleteFile(@PathVariable Long attachmentId) {
         attachmentService.deleteAttachment(attachmentId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().header("X-API-Version", apiVersion).build();
     }
 
     @GetMapping("/tasks/{taskId}/attachments")
@@ -61,6 +66,6 @@ public class AttachmentController {
         List<AttachmentResponseDto> dtos = attachmentService.getAttachmentsByTaskId(taskId).stream()
                 .map(attachmentMapper::toResponseDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok().header("X-API-Version", apiVersion).body(dtos);
     }
 }
