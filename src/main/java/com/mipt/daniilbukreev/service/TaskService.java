@@ -1,14 +1,18 @@
 package com.mipt.daniilbukreev.service;
 
+import com.mipt.daniilbukreev.model.Priority;
 import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.repository.TaskRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -35,12 +39,10 @@ public class TaskService {
     @PostConstruct
     public void initCache() {
         System.out.println("TaskService: Initializing cache...");
-        Task task1 = new Task(null, "Initial Task 1", "Loaded from PostConstruct", false);
-        Task task2 = new Task(null, "Initial Task 2", "Another PostConstruct task", false);
-        taskRepository.save(task1);
-        taskRepository.save(task2);
-        taskCache.put(task1.getId(), task1);
-        taskCache.put(task2.getId(), task2);
+        Task task1 = new Task(null, "Initial Task 1", "Loaded from PostConstruct", false, LocalDateTime.now(), LocalDate.now().plusDays(1), Priority.MEDIUM, Set.of("init"));
+        Task task2 = new Task(null, "Initial Task 2", "Another PostConstruct task", false, LocalDateTime.now(), LocalDate.now().plusDays(2), Priority.LOW, Set.of("init", "test"));
+        createTask(task1);
+        createTask(task2);
         System.out.println("TaskService: Cache initialized with " + taskCache.size() + " tasks");
     }
 
@@ -66,6 +68,7 @@ public class TaskService {
     }
 
     public Task createTask(Task task) {
+        task.setCreatedAt(LocalDateTime.now());
         Task savedTask = taskRepository.save(task);
         taskCache.put(savedTask.getId(), savedTask);
         return savedTask;
