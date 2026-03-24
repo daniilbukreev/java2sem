@@ -6,7 +6,6 @@ import com.mipt.daniilbukreev.validation.OnUpdate;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -31,7 +30,6 @@ public class TaskUpdateDto {
     private LocalDate dueDate;
 
     @Schema(description = "Updated priority of the task", example = "HIGH", nullable = true)
-    @NotNull(groups = OnUpdate.class)
     private Priority priority;
 
     @ArraySchema(schema = @Schema(description = "Updated tags associated with the task", example = "[\"dairy\", \"urgent\"]", nullable = true))
