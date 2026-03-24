@@ -6,7 +6,10 @@ import com.mipt.daniilbukreev.dto.TaskUpdateDto;
 import com.mipt.daniilbukreev.mapper.TaskMapper;
 import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.service.TaskService;
+import com.mipt.daniilbukreev.validation.OnCreate;
+import com.mipt.daniilbukreev.validation.OnUpdate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/tasks")
+@Validated
 public class TaskController {
 
     private final TaskService taskService;
@@ -49,14 +53,14 @@ public class TaskController {
     }
 
     @PostMapping
-    public TaskResponseDto createTask(@RequestBody TaskCreateDto taskDto) {
+    public TaskResponseDto createTask(@Validated(OnCreate.class) @RequestBody TaskCreateDto taskDto) {
         Task task = taskMapper.toEntity(taskDto);
         Task createdTask = taskService.createTask(task);
         return taskMapper.toResponseDto(createdTask);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskResponseDto> updateTask(@PathVariable Long id, @RequestBody TaskUpdateDto taskDto) {
+    public ResponseEntity<TaskResponseDto> updateTask(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody TaskUpdateDto taskDto) {
         return taskService.getTaskById(id)
                 .map(existingTask -> {
                     Task updatedTask = taskMapper.updateEntity(taskDto, existingTask);
