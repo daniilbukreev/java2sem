@@ -44,8 +44,7 @@ public class AttachmentService {
     }
 
     public TaskAttachment storeAttachment(Long taskId, MultipartFile file) {
-        taskService.getTaskById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
+        taskService.getTaskByIdOrThrow(taskId);
 
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.contains("..")) {
@@ -107,8 +106,7 @@ public class AttachmentService {
     }
 
     public List<TaskAttachment> getAttachmentsByTaskId(Long taskId) {
-        taskService.getTaskById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
+        taskService.getTaskByIdOrThrow(taskId);
         return attachmentRepository.findByTaskId(taskId);
     }
 }

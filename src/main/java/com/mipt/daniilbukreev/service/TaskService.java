@@ -1,5 +1,6 @@
 package com.mipt.daniilbukreev.service;
 
+import com.mipt.daniilbukreev.exception.TaskNotFoundException;
 import com.mipt.daniilbukreev.model.Priority;
 import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.repository.TaskRepository;
@@ -67,6 +68,11 @@ public class TaskService {
         return taskRepository.findById(id);
     }
 
+    public Task getTaskByIdOrThrow(Long id) {
+        return getTaskById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+    }
+
     public Task createTask(Task task) {
         task.setCreatedAt(LocalDateTime.now());
         Task savedTask = taskRepository.save(task);
@@ -75,12 +81,14 @@ public class TaskService {
     }
 
     public Task updateTask(Task task) {
+        getTaskByIdOrThrow(task.getId());
         Task updatedTask = taskRepository.update(task);
         taskCache.put(updatedTask.getId(), updatedTask);
         return updatedTask;
     }
 
     public void deleteTask(Long id) {
+        getTaskByIdOrThrow(id);
         taskRepository.deleteById(id);
         taskCache.remove(id);
     }
