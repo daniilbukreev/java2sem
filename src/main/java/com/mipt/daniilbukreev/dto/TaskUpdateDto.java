@@ -1,16 +1,32 @@
 package com.mipt.daniilbukreev.dto;
 
 import com.mipt.daniilbukreev.model.Priority;
+import com.mipt.daniilbukreev.validation.DueDateNotBeforeCreation;
+import com.mipt.daniilbukreev.validation.OnUpdate;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 import java.util.Set;
 
+@DueDateNotBeforeCreation(groups = OnUpdate.class)
 public class TaskUpdateDto {
+    @Size(min = 3, max = 100, groups = OnUpdate.class)
     private String title;
+
+    @Size(max = 500, groups = OnUpdate.class)
     private String description;
+
     private Boolean completed;
+
+    @FutureOrPresent(groups = OnUpdate.class)
     private LocalDate dueDate;
+
+    @NotNull(groups = OnUpdate.class)
     private Priority priority;
+
+    @Size(max = 5, groups = OnUpdate.class)
     private Set<String> tags;
 
     public String getTitle() {
