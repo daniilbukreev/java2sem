@@ -17,9 +17,12 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
-  version: 2.0.0
+  info:
+    title: "To-Do List API"
+    description: "API for managing tasks, attachments, and user preferences."
+    version: "2.0.0"
 
 app:
   name: To-Do List Manager
-  version: 1.0.0
+  version: 2.0.0
   upload-dir: ./uploads
