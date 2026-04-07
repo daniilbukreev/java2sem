@@ -4,7 +4,6 @@ import com.mipt.daniilbukreev.model.Priority;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -25,14 +24,21 @@ public class TaskResponseDto {
     @Schema(description = "Date and time when the task was created", example = "2026-03-24T10:00:00")
     private LocalDateTime createdAt;
 
-    @Schema(description = "Due date for the task", example = "2026-04-01")
-    private LocalDate dueDate;
+    @Schema(description = "Date and time when the task was last updated", example = "2026-03-24T12:30:00")
+    private LocalDateTime updatedAt;
+
+    @Schema(description = "Due date for the task", example = "2026-04-01T23:59:59")
+    private LocalDateTime dueDate;
 
     @Schema(description = "Priority of the task", example = "MEDIUM")
     private Priority priority;
 
     @ArraySchema(schema = @Schema(description = "Tags associated with the task", example = "[\"home\", \"urgent\"]"))
     private Set<String> tags;
+
+    @ArraySchema(schema = @Schema(description = "Attachments associated with the task"))
+    private Set<AttachmentResponseDto> attachments;
+
 
     public Long getId() {
         return id;
@@ -74,11 +80,19 @@ public class TaskResponseDto {
         this.createdAt = createdAt;
     }
 
-    public LocalDate getDueDate() {
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(LocalDate dueDate) {
+    public void setDueDate(LocalDateTime dueDate) {
         this.dueDate = dueDate;
     }
 
@@ -96,5 +110,13 @@ public class TaskResponseDto {
 
     public void setTags(Set<String> tags) {
         this.tags = tags;
+    }
+
+    public Set<AttachmentResponseDto> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(Set<AttachmentResponseDto> attachments) {
+        this.attachments = attachments;
     }
 }

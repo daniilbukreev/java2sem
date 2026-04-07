@@ -4,12 +4,14 @@ import com.mipt.daniilbukreev.repository.StubTaskRepository;
 import com.mipt.daniilbukreev.repository.TaskRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
  * Application configuration class.
  * Defines beans that are managed by the Spring container.
  */
 @Configuration
+@EnableJpaAuditing
 public class AppConfig {
 
     /**
