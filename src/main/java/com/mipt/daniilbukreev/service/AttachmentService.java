@@ -61,9 +61,9 @@ public class AttachmentService {
         }
 
         TaskAttachment attachment = new TaskAttachment();
-        attachment.setTaskId(taskId);
+        attachment.setTask(taskService.getTaskByIdOrThrow(taskId));
         attachment.setFileName(originalFileName);
-        attachment.setStoredFileName(storedFileName);
+        attachment.setFilePath(storedFileName);
         attachment.setContentType(file.getContentType());
         attachment.setSize(file.getSize());
         attachment.setUploadedAt(LocalDateTime.now());
@@ -80,7 +80,7 @@ public class AttachmentService {
                 .orElseThrow(() -> new RuntimeException("Attachment not found with ID: " + attachmentId));
 
         try {
-            Path filePath = Paths.get(uploadDir).resolve(attachment.getStoredFileName()).normalize();
+            Path filePath = Paths.get(uploadDir).resolve(attachment.getFilePath()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
@@ -96,7 +96,7 @@ public class AttachmentService {
         TaskAttachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Attachment not found with ID: " + attachmentId));
 
-        Path filePath = Paths.get(uploadDir).resolve(attachment.getStoredFileName()).normalize();
+        Path filePath = Paths.get(uploadDir).resolve(attachment.getFilePath()).normalize();
         try {
             Files.deleteIfExists(filePath);
             attachmentRepository.deleteById(attachmentId);
