@@ -16,7 +16,9 @@ class AttachmentMapperTest {
 
     @Test
     void toResponseDto_ShouldMapTaskAttachmentToDto() {
-        TaskAttachment attachment = new TaskAttachment(1L, 10L, "document.pdf", "uuid_document.pdf", "application/pdf", 1024L, LocalDateTime.now());
+        TaskAttachment attachment = new TaskAttachment("document.pdf", "uuid_document.pdf", "application/pdf", 1024L);
+        attachment.setId(1L);
+        attachment.setCreatedAt(LocalDateTime.now());
 
         AttachmentResponseDto dto = mapper.toResponseDto(attachment);
 
@@ -24,6 +26,6 @@ class AttachmentMapperTest {
         assertEquals(attachment.getId(), dto.getId());
         assertEquals(attachment.getFileName(), dto.getFileName());
         assertEquals(attachment.getSize(), dto.getSize());
-        assertEquals(attachment.getUploadedAt(), dto.getUploadedAt());
+        assertEquals(attachment.getCreatedAt(), dto.getCreatedAt());
     }
 }

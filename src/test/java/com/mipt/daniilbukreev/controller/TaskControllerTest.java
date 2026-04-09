@@ -33,7 +33,10 @@ import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = "app.upload-dir=./target/uploads-test")
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@ActiveProfiles("test")
 public class TaskControllerTest {
 
     private MockMvc mockMvc;
@@ -56,7 +59,9 @@ public class TaskControllerTest {
     }
 
     private Task createTask(Long id, String title) {
-        return new Task(id, title, "Desc", false, LocalDateTime.now(), LocalDate.now().plusDays(1), Priority.MEDIUM, Set.of("test"));
+        Task task = new Task(title, "Desc", false, LocalDateTime.now().plusDays(1), Priority.MEDIUM, Set.of("test"));
+        task.setId(id);
+        return task;
     }
 
     private TaskResponseDto createTaskResponseDto(Long id, String title) {
@@ -101,12 +106,12 @@ public class TaskControllerTest {
         TaskCreateDto taskDto = new TaskCreateDto();
         taskDto.setTitle("New Task");
         taskDto.setPriority(Priority.HIGH);
-        taskDto.setDueDate(LocalDate.now().plusDays(1));
+        taskDto.setDueDate(LocalDateTime.now().plusDays(1));
 
         Task createdTask = createTask(1L, "New Task");
         TaskResponseDto responseDto = createTaskResponseDto(1L, "New Task");
 
-        given(taskMapper.toEntity(any(TaskCreateDto.class))).willReturn(new Task());
+        given(taskMapper.toEntity(any(TaskCreateDto.class))).willReturn(new Task("New Task", null, false, LocalDateTime.now().plusDays(1), Priority.HIGH, null));
         given(taskService.createTask(any(Task.class))).willReturn(createdTask);
         given(taskMapper.toResponseDto(createdTask)).willReturn(responseDto);
 
@@ -135,7 +140,7 @@ public class TaskControllerTest {
         TaskCreateDto taskDto = new TaskCreateDto();
         taskDto.setTitle("A valid title");
         taskDto.setPriority(Priority.HIGH);
-        taskDto.setDueDate(LocalDate.now().minusDays(1));
+        taskDto.setDueDate(LocalDateTime.now().minusDays(1));
 
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)

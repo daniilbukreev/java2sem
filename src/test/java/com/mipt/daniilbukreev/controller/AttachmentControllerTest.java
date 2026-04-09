@@ -47,7 +47,8 @@ public class AttachmentControllerTest {
                 "Hello, World!".getBytes()
         );
 
-        TaskAttachment attachment = new TaskAttachment(1L, 1L, "test.txt", "uuid_test.txt", "text/plain", 13L, LocalDateTime.now());
+        TaskAttachment attachment = new TaskAttachment("test.txt", "uuid_test.txt", "text/plain", 13L);
+        attachment.setId(1L);
         AttachmentResponseDto responseDto = new AttachmentResponseDto();
         responseDto.setId(1L);
         responseDto.setFileName("test.txt");
@@ -82,7 +83,8 @@ public class AttachmentControllerTest {
 
     @Test
     void getAttachmentsForTask_ShouldReturnListOfAttachments() throws Exception {
-        TaskAttachment attachment = new TaskAttachment(1L, 1L, "test.txt", "uuid_test.txt", "text/plain", 13L, LocalDateTime.now());
+        TaskAttachment attachment = new TaskAttachment("test.txt", "uuid_test.txt", "text/plain", 13L);
+        attachment.setId(1L);
         AttachmentResponseDto responseDto = new AttachmentResponseDto();
         responseDto.setId(1L);
         responseDto.setFileName("test.txt");

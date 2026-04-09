@@ -12,7 +12,10 @@ import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "app.upload-dir=./target/uploads-test")
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "app.version=2.0.0")
+@ActiveProfiles("test")
 public class PreferencesControllerTest {
 
     @Autowired
