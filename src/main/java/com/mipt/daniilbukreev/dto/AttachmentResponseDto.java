@@ -21,7 +21,7 @@ public class AttachmentResponseDto {
     private long size;
 
     @Schema(description = "Date and time when the attachment was uploaded", example = "2026-03-24T10:00:00")
-    private LocalDateTime uploadedAt;
+    private LocalDateTime createdAt;
 
     public Long getId() {
         return id;
@@ -63,11 +63,11 @@ public class AttachmentResponseDto {
         this.size = size;
     }
 
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setUploadedAt(LocalDateTime uploadedAt) {
-        this.uploadedAt = uploadedAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

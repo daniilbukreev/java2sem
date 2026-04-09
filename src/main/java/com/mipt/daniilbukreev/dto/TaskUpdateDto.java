@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Schema(description = "DTO for updating an existing Task")
@@ -25,9 +25,9 @@ public class TaskUpdateDto {
     @Schema(description = "Completion status of the task", example = "true", nullable = true)
     private Boolean completed;
 
-    @Schema(description = "Updated due date for the task", example = "2026-04-05", nullable = true)
+    @Schema(description = "Updated due date for the task", example = "2026-04-05T12:00:00", nullable = true)
     @FutureOrPresent(groups = OnUpdate.class)
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
 
     @Schema(description = "Updated priority of the task", example = "HIGH", nullable = true)
     private Priority priority;
@@ -60,11 +60,11 @@ public class TaskUpdateDto {
         this.completed = completed;
     }
 
-    public LocalDate getDueDate() {
+    public LocalDateTime getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(LocalDate dueDate) {
+    public void setDueDate(LocalDateTime dueDate) {
         this.dueDate = dueDate;
     }
 
