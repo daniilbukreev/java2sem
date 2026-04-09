@@ -1,28 +1,47 @@
 package com.mipt.daniilbukreev.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+@Entity
+@Table(name = "task_attachments")
+@EntityListeners(AuditingEntityListener.class)
 public class TaskAttachment {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long taskId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id", nullable = false)
+    private Task task;
+
+    @Column(name = "file_name", nullable = false)
     private String fileName;
-    private String storedFileName;
+
+    @Column(name = "file_path", nullable = false)
+    private String filePath;
+
+    @Column(name = "content_type")
     private String contentType;
+
+    @Column(name = "size")
     private long size;
-    private LocalDateTime uploadedAt;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     public TaskAttachment() {
     }
 
-    public TaskAttachment(Long id, Long taskId, String fileName, String storedFileName, String contentType, long size, LocalDateTime uploadedAt) {
-        this.id = id;
-        this.taskId = taskId;
+    public TaskAttachment(String fileName, String filePath, String contentType, long size) {
         this.fileName = fileName;
-        this.storedFileName = storedFileName;
+        this.filePath = filePath;
         this.contentType = contentType;
         this.size = size;
-        this.uploadedAt = uploadedAt;
     }
 
     public Long getId() {
@@ -33,12 +52,12 @@ public class TaskAttachment {
         this.id = id;
     }
 
-    public Long getTaskId() {
-        return taskId;
+    public Task getTask() {
+        return task;
     }
 
-    public void setTaskId(Long taskId) {
-        this.taskId = taskId;
+    public void setTask(Task task) {
+        this.task = task;
     }
 
     public String getFileName() {
@@ -49,12 +68,12 @@ public class TaskAttachment {
         this.fileName = fileName;
     }
 
-    public String getStoredFileName() {
-        return storedFileName;
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setStoredFileName(String storedFileName) {
-        this.storedFileName = storedFileName;
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
     public String getContentType() {
@@ -73,12 +92,12 @@ public class TaskAttachment {
         this.size = size;
     }
 
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setUploadedAt(LocalDateTime uploadedAt) {
-        this.uploadedAt = uploadedAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override
@@ -86,24 +105,24 @@ public class TaskAttachment {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TaskAttachment that = (TaskAttachment) o;
-        return size == that.size && Objects.equals(id, that.id) && Objects.equals(taskId, that.taskId) && Objects.equals(fileName, that.fileName) && Objects.equals(storedFileName, that.storedFileName) && Objects.equals(contentType, that.contentType) && Objects.equals(uploadedAt, that.uploadedAt);
+        return size == that.size && Objects.equals(id, that.id) && Objects.equals(fileName, that.fileName) && Objects.equals(filePath, that.filePath) && Objects.equals(contentType, that.contentType) && Objects.equals(createdAt, that.createdAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, taskId, fileName, storedFileName, contentType, size, uploadedAt);
+        return Objects.hash(id, fileName, filePath, contentType, size, createdAt);
     }
 
     @Override
     public String toString() {
         return "TaskAttachment{" +
                 "id=" + id +
-                ", taskId=" + taskId +
+                ", task=" + (task != null ? task.getId() : "null") +
                 ", fileName='" + fileName + '\'' +
-                ", storedFileName='" + storedFileName + '\'' +
+                ", filePath='" + filePath + '\'' +
                 ", contentType='" + contentType + '\'' +
                 ", size=" + size +
-                ", uploadedAt=" + uploadedAt +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }

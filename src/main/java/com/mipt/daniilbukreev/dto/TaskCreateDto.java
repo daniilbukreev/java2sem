@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Schema(description = "DTO for creating a new Task")
@@ -23,9 +23,9 @@ public class TaskCreateDto {
     @Size(max = 500, groups = OnCreate.class)
     private String description;
 
-    @Schema(description = "Due date for the task", example = "2026-04-01", nullable = true)
+    @Schema(description = "Due date for the task", example = "2026-04-01T12:00:00", nullable = true)
     @FutureOrPresent(groups = OnCreate.class)
-    private LocalDate dueDate;
+    private LocalDateTime dueDate;
 
     @Schema(description = "Priority of the task", example = "MEDIUM")
     @NotNull(groups = OnCreate.class)
@@ -51,11 +51,11 @@ public class TaskCreateDto {
         this.description = description;
     }
 
-    public LocalDate getDueDate() {
+    public LocalDateTime getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(LocalDate dueDate) {
+    public void setDueDate(LocalDateTime dueDate) {
         this.dueDate = dueDate;
     }
 

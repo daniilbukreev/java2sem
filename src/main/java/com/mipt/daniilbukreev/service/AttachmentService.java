@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
+import com.mipt.daniilbukreev.model.Task;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +44,7 @@ public class AttachmentService {
     }
 
     public TaskAttachment storeAttachment(Long taskId, MultipartFile file) {
-        taskService.getTaskByIdOrThrow(taskId);
+        Task task = taskService.getTaskByIdOrThrow(taskId);
 
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.contains("..")) {
@@ -61,12 +61,11 @@ public class AttachmentService {
         }
 
         TaskAttachment attachment = new TaskAttachment();
-        attachment.setTaskId(taskId);
+        attachment.setTask(task);
         attachment.setFileName(originalFileName);
-        attachment.setStoredFileName(storedFileName);
+        attachment.setFilePath(storedFileName);
         attachment.setContentType(file.getContentType());
         attachment.setSize(file.getSize());
-        attachment.setUploadedAt(LocalDateTime.now());
 
         return attachmentRepository.save(attachment);
     }
@@ -80,7 +79,7 @@ public class AttachmentService {
                 .orElseThrow(() -> new RuntimeException("Attachment not found with ID: " + attachmentId));
 
         try {
-            Path filePath = Paths.get(uploadDir).resolve(attachment.getStoredFileName()).normalize();
+            Path filePath = Paths.get(uploadDir).resolve(attachment.getFilePath()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
@@ -96,7 +95,7 @@ public class AttachmentService {
         TaskAttachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Attachment not found with ID: " + attachmentId));
 
-        Path filePath = Paths.get(uploadDir).resolve(attachment.getStoredFileName()).normalize();
+        Path filePath = Paths.get(uploadDir).resolve(attachment.getFilePath()).normalize();
         try {
             Files.deleteIfExists(filePath);
             attachmentRepository.deleteById(attachmentId);

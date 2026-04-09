@@ -10,7 +10,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.HandlerMapping;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class DueDateNotBeforeCreationValidator implements ConstraintValidator<DueDateNotBeforeCreation, TaskUpdateDto> {
@@ -34,8 +34,8 @@ public class DueDateNotBeforeCreationValidator implements ConstraintValidator<Du
         return taskRepository.findById(taskId)
                 .map(Task::getCreatedAt)
                 .map(createdAt -> {
-                    LocalDate creationDate = createdAt.toLocalDate();
-                    return dto.getDueDate().isAfter(creationDate) || dto.getDueDate().isEqual(creationDate);
+                    LocalDateTime creationDateTime = createdAt;
+                    return dto.getDueDate().isAfter(creationDateTime) || dto.getDueDate().isEqual(creationDateTime);
                 })
                 .orElse(true);
     }

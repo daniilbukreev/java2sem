@@ -119,12 +119,11 @@ public class TaskController {
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponseDto> updateTask(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody TaskUpdateDto taskDto) {
         Task existingTask = taskService.getTaskByIdOrThrow(id);
-        Task updatedTask = taskMapper.updateEntity(taskDto, existingTask);
-        updatedTask.setId(id);
-        taskService.updateTask(updatedTask);
+        taskMapper.updateEntity(taskDto, existingTask);
+        Task savedTask = taskService.updateTask(existingTask);
         return ResponseEntity.ok()
                 .header("X-API-Version", apiVersion)
-                .body(taskMapper.toResponseDto(updatedTask));
+                .body(taskMapper.toResponseDto(savedTask));
     }
 
     @Operation(summary = "Delete a task by ID",

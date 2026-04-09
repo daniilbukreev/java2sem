@@ -8,7 +8,6 @@ import com.mipt.daniilbukreev.model.Task;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -23,7 +22,7 @@ class TaskMapperTest {
         TaskCreateDto dto = new TaskCreateDto();
         dto.setTitle("Test Create");
         dto.setDescription("Desc Create");
-        dto.setDueDate(LocalDate.now().plusDays(1));
+        dto.setDueDate(LocalDateTime.now().plusDays(1));
         dto.setPriority(Priority.HIGH);
         dto.setTags(Set.of("tag1", "tag2"));
 
@@ -46,12 +45,14 @@ class TaskMapperTest {
         dto.setTitle("Updated Title");
         dto.setDescription("Updated Desc");
         dto.setCompleted(true);
-        dto.setDueDate(LocalDate.now().plusDays(5));
+        dto.setDueDate(LocalDateTime.now().plusDays(5));
         dto.setPriority(Priority.LOW);
         dto.setTags(Set.of("newTag"));
 
-        Task existingTask = new Task(1L, "Original Title", "Original Desc", false,
-                LocalDateTime.now(), LocalDate.now().plusDays(10), Priority.MEDIUM, new java.util.HashSet<>(Set.of("oldTag")));
+        Task existingTask = new Task("Original Title", "Original Desc", false,
+                LocalDateTime.now().plusDays(10), Priority.MEDIUM, new java.util.HashSet<>(Set.of("oldTag")));
+        existingTask.setId(1L);
+        existingTask.setCreatedAt(LocalDateTime.now());
 
         mapper.updateEntity(dto, existingTask);
 
@@ -71,8 +72,11 @@ class TaskMapperTest {
         TaskUpdateDto dto = new TaskUpdateDto();
         dto.setTitle("Partial Update");
 
-        Task existingTask = new Task(1L, "Original Title", "Original Desc", false,
-                LocalDateTime.now(), LocalDate.now().plusDays(10), Priority.MEDIUM, new java.util.HashSet<>(Set.of("oldTag")));
+        LocalDateTime originalDueDate = LocalDateTime.now().plusDays(10);
+        Task existingTask = new Task("Original Title", "Original Desc", false,
+                originalDueDate, Priority.MEDIUM, new java.util.HashSet<>(Set.of("oldTag")));
+        existingTask.setId(1L);
+        existingTask.setCreatedAt(LocalDateTime.now());
 
         mapper.updateEntity(dto, existingTask);
 
@@ -81,7 +85,7 @@ class TaskMapperTest {
         assertEquals(dto.getTitle(), existingTask.getTitle());
         assertEquals("Original Desc", existingTask.getDescription());
         assertFalse(existingTask.isCompleted());
-        assertEquals(LocalDate.now().plusDays(10), existingTask.getDueDate());
+        assertEquals(originalDueDate, existingTask.getDueDate());
         assertEquals(Priority.MEDIUM, existingTask.getPriority());
         assertEquals(Set.of("oldTag"), existingTask.getTags());
     }
@@ -89,8 +93,10 @@ class TaskMapperTest {
 
     @Test
     void toResponseDto_ShouldMapTaskToTaskResponseDto() {
-        Task task = new Task(1L, "Response Task", "Response Desc", true,
-                LocalDateTime.now(), LocalDate.now().plusDays(2), Priority.LOW, Set.of("respTag"));
+        Task task = new Task("Response Task", "Response Desc", true,
+                LocalDateTime.now().plusDays(2), Priority.LOW, Set.of("respTag"));
+        task.setId(1L);
+        task.setCreatedAt(LocalDateTime.now());
 
         TaskResponseDto dto = mapper.toResponseDto(task);
 

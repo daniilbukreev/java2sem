@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -34,13 +33,16 @@ class TaskServiceTest {
 
     @BeforeEach
     void setUp() {
-        sampleTask = new Task(1L, "Test Task", "Description", false,
-                LocalDateTime.now(), LocalDate.now().plusDays(7), Priority.MEDIUM, Set.of("tag1"));
+        sampleTask = new Task("Test Task", "Description", false,
+                LocalDateTime.now().plusDays(7), Priority.MEDIUM, Set.of("tag1"));
+        sampleTask.setId(1L);
+        sampleTask.setCreatedAt(LocalDateTime.now());
+        sampleTask.setUpdatedAt(LocalDateTime.now());
     }
 
     @Test
     void getAllTasks_ShouldReturnAllTasks() {
-        when(taskRepository.findAll()).thenReturn(Arrays.asList(sampleTask, new Task(2L, "Another Task", "Desc", true, LocalDateTime.now(), LocalDate.now().plusDays(1), Priority.LOW, Set.of())));
+        when(taskRepository.findAll()).thenReturn(Arrays.asList(sampleTask, new Task("Another Task", "Desc", true, LocalDateTime.now().plusDays(1), Priority.LOW, Set.of())));
 
         List<Task> tasks = taskService.getAllTasks();
 
@@ -91,10 +93,12 @@ class TaskServiceTest {
 
     @Test
     void createTask_ShouldSetCreatedAtAndSaveTask() {
-        Task newTask = new Task(null, "New Task", "New Desc", false, null, LocalDate.now().plusDays(5), Priority.HIGH, Set.of("new"));
+        Task newTask = new Task("New Task", "New Desc", false, LocalDateTime.now().plusDays(5), Priority.HIGH, Set.of("new"));
         when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> {
             Task task = invocation.getArgument(0);
             task.setId(3L);
+            task.setCreatedAt(LocalDateTime.now());
+            task.setUpdatedAt(LocalDateTime.now());
             return task;
         });
 
@@ -108,8 +112,10 @@ class TaskServiceTest {
 
     @Test
     void updateTask_ShouldSaveTask() {
-        Task updatedTask = new Task(1L, "Updated Task", "Updated Desc", true,
-                sampleTask.getCreatedAt(), LocalDate.now().plusDays(10), Priority.LOW, Set.of("updated"));
+        Task updatedTask = new Task("Updated Task", "Updated Desc", true,
+                LocalDateTime.now().plusDays(10), Priority.LOW, Set.of("updated"));
+        updatedTask.setId(1L);
+        updatedTask.setCreatedAt(sampleTask.getCreatedAt());
         when(taskRepository.findById(1L)).thenReturn(Optional.of(sampleTask));
         when(taskRepository.save(any(Task.class))).thenReturn(updatedTask);
 

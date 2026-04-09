@@ -5,7 +5,9 @@ import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +32,10 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
+    public List<Task> getAllTasksWithAttachments() {
+        return taskRepository.findAllWithAttachments();
+    }
+
     public Optional<Task> getTaskById(Long id) {
         return taskRepository.findById(id);
     }
@@ -40,7 +46,6 @@ public class TaskService {
     }
 
     public Task createTask(Task task) {
-        task.setCreatedAt(LocalDateTime.now());
         return taskRepository.save(task);
     }
 
@@ -52,5 +57,14 @@ public class TaskService {
     public void deleteTask(Long id) {
         getTaskByIdOrThrow(id);
         taskRepository.deleteById(id);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = TaskNotFoundException.class)
+    public void bulkCompleteTasks(List<Long> ids) {
+        for (Long id : ids) {
+            Task task = getTaskByIdOrThrow(id);
+            task.setCompleted(true);
+            taskRepository.save(task);
+        }
     }
 }

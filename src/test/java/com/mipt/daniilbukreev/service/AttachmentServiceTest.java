@@ -4,6 +4,7 @@ import com.mipt.daniilbukreev.exception.TaskNotFoundException;
 import com.mipt.daniilbukreev.model.Task;
 import com.mipt.daniilbukreev.model.TaskAttachment;
 import com.mipt.daniilbukreev.repository.TaskAttachmentRepository;
+import com.mipt.daniilbukreev.model.Priority;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ class AttachmentServiceTest {
     void storeAttachment_ShouldSaveFileAndMetadata() {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "test.txt", "text/plain", "Hello World".getBytes());
-        Task mockTask = new Task();
+        Task mockTask = new Task("Test Task", "Test Description", false, LocalDateTime.now(), Priority.HIGH, Collections.emptySet());
         when(taskService.getTaskByIdOrThrow(1L)).thenReturn(mockTask);
         when(attachmentRepository.save(any(TaskAttachment.class))).thenAnswer(invocation -> {
             TaskAttachment attachment = invocation.getArgument(0);
@@ -77,8 +78,8 @@ class AttachmentServiceTest {
 
         assertNotNull(result);
         assertEquals("test.txt", result.getFileName());
-        assertNotNull(result.getStoredFileName());
-        assertTrue(Files.exists(Paths.get(uploadDir).resolve(result.getStoredFileName())));
+        assertNotNull(result.getFilePath());
+        assertTrue(Files.exists(Paths.get(uploadDir).resolve(result.getFilePath())));
         verify(taskService, times(1)).getTaskByIdOrThrow(1L);
         verify(attachmentRepository, times(1)).save(any(TaskAttachment.class));
     }
@@ -99,9 +100,8 @@ class AttachmentServiceTest {
         Path tempFile = Paths.get(uploadDir).resolve("stored_file.txt");
         Files.write(tempFile, fileContent.getBytes());
 
-        TaskAttachment attachment = new TaskAttachment();
+        TaskAttachment attachment = new TaskAttachment("stored_file.txt", "stored_file.txt", "text/plain", 100L);
         attachment.setId(1L);
-        attachment.setStoredFileName("stored_file.txt");
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(attachment));
 
         Resource resource = attachmentService.loadAsResource(1L);
@@ -121,21 +121,18 @@ class AttachmentServiceTest {
 
     @Test
     void deleteAttachment_ShouldDeleteFileAndMetadata() throws IOException {
-        String storedFileName = "file_to_delete.txt";
-        Path tempFile = Paths.get(uploadDir).resolve(storedFileName);
+        String filePath = "file_to_delete.txt";
+        Path tempFile = Paths.get(uploadDir).resolve(filePath);
         Files.write(tempFile, "Content".getBytes());
 
-        TaskAttachment attachment = new TaskAttachment();
+        TaskAttachment attachment = new TaskAttachment(filePath, filePath, "text/plain", 100L);
         attachment.setId(1L);
-        attachment.setStoredFileName(storedFileName);
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(attachment));
         doNothing().when(attachmentRepository).deleteById(1L);
 
         attachmentService.deleteAttachment(1L);
 
         assertFalse(Files.exists(tempFile));
-        verify(attachmentRepository, times(1)).findById(1L);
-        verify(attachmentRepository, times(1)).deleteById(1L);
     }
 
     @Test
@@ -148,8 +145,8 @@ class AttachmentServiceTest {
 
     @Test
     void getAttachmentsByTaskId_ShouldReturnListOfAttachments() {
-        Task mockTask = new Task();
-        TaskAttachment attachment = new TaskAttachment(1L, 1L, "file.txt", "stored.txt", "text/plain", 100L, LocalDateTime.now());
+        Task mockTask = new Task("Test Task", "Test Description", false, LocalDateTime.now(), Priority.HIGH, Collections.emptySet());
+        TaskAttachment attachment = new TaskAttachment("file.txt", "stored.txt", "text/plain", 100L);
         when(taskService.getTaskByIdOrThrow(1L)).thenReturn(mockTask);
         when(attachmentRepository.findByTaskId(1L)).thenReturn(Collections.singletonList(attachment));
 

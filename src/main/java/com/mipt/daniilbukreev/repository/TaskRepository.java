@@ -1,45 +1,22 @@
 package com.mipt.daniilbukreev.repository;
 
+import com.mipt.daniilbukreev.model.Priority;
 import com.mipt.daniilbukreev.model.Task;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * Interface for data access operations on {@link Task} entities.
- * Defines the standard CRUD operations.
- */
-public interface TaskRepository {
-    /**
-     * Retrieves all tasks.
-     * @return a list of all tasks.
-     */
-    List<Task> findAll();
+public interface TaskRepository extends JpaRepository<Task, Long> {
+    List<Task> findByCompletedAndPriority(boolean completed, Priority priority);
 
-    /**
-     * Retrieves a task by its ID.
-     * @param id the ID of the task to retrieve.
-     * @return an {@link Optional} containing the task if found, or empty if not.
-     */
-    Optional<Task> findById(Long id);
+    @Query("SELECT t FROM Task t WHERE t.dueDate >= :now AND t.dueDate <= :sevenDaysFromNow")
+    List<Task> findTasksDueWithin7Days(@Param("now") LocalDateTime now, @Param("sevenDaysFromNow") LocalDateTime sevenDaysFromNow);
 
-    /**
-     * Saves a new task or updates an existing one.
-     * @param task the task to save.
-     * @return the saved task.
-     */
-    Task save(Task task);
-
-    /**
-     * Updates an existing task.
-     * @param task the task to update.
-     * @return the updated task.
-     */
-    Task update(Task task);
-
-    /**
-     * Deletes a task by its ID.
-     * @param id the ID of the task to delete.
-     */
-    void deleteById(Long id);
+    @EntityGraph(attributePaths = "attachments")
+    @Query("SELECT t FROM Task t")
+    List<Task> findAllWithAttachments();
 }
