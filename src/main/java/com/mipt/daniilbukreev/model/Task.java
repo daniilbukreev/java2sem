@@ -168,12 +168,12 @@ public class Task {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return completed == task.completed && Objects.equals(id, task.id) && Objects.equals(title, task.title) && Objects.equals(description, task.description) && Objects.equals(createdAt, task.createdAt) && Objects.equals(dueDate, task.dueDate) && priority == task.priority && Objects.equals(tagsString, task.tagsString);
+        return completed == task.completed && Objects.equals(id, task.id) && Objects.equals(title, task.title) && Objects.equals(description, task.description) && Objects.equals(createdAt, task.createdAt) && Objects.equals(updatedAt, task.updatedAt) && Objects.equals(dueDate, task.dueDate) && priority == task.priority && Objects.equals(tagsString, task.tagsString);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, title, description, completed, createdAt, dueDate, priority, tagsString);
+        return Objects.hash(id, title, description, completed, createdAt, updatedAt, dueDate, priority, tagsString);
     }
 
     @Override

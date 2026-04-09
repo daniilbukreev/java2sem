@@ -32,7 +32,7 @@ public class TaskAttachment {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime uploadedAt;
+    private LocalDateTime createdAt;
 
     public TaskAttachment() {
     }
@@ -92,12 +92,12 @@ public class TaskAttachment {
         this.size = size;
     }
 
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setUploadedAt(LocalDateTime uploadedAt) {
-        this.uploadedAt = uploadedAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override
@@ -105,12 +105,12 @@ public class TaskAttachment {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TaskAttachment that = (TaskAttachment) o;
-        return size == that.size && Objects.equals(id, that.id) && Objects.equals(fileName, that.fileName) && Objects.equals(filePath, that.filePath) && Objects.equals(contentType, that.contentType) && Objects.equals(uploadedAt, that.uploadedAt);
+        return size == that.size && Objects.equals(id, that.id) && Objects.equals(fileName, that.fileName) && Objects.equals(filePath, that.filePath) && Objects.equals(contentType, that.contentType) && Objects.equals(createdAt, that.createdAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, fileName, filePath, contentType, size, uploadedAt);
+        return Objects.hash(id, fileName, filePath, contentType, size, createdAt);
     }
 
     @Override
@@ -122,7 +122,7 @@ public class TaskAttachment {
                 ", filePath='" + filePath + '\'' +
                 ", contentType='" + contentType + '\'' +
                 ", size=" + size +
-                ", uploadedAt=" + uploadedAt +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }
