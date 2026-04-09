@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,7 +46,6 @@ public class TaskService {
     }
 
     public Task createTask(Task task) {
-        task.setCreatedAt(LocalDateTime.now());
         return taskRepository.save(task);
     }
 

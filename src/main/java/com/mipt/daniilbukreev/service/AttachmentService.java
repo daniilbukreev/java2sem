@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
+import com.mipt.daniilbukreev.model.Task;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +44,7 @@ public class AttachmentService {
     }
 
     public TaskAttachment storeAttachment(Long taskId, MultipartFile file) {
-        taskService.getTaskByIdOrThrow(taskId);
+        Task task = taskService.getTaskByIdOrThrow(taskId);
 
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.contains("..")) {
@@ -61,12 +61,11 @@ public class AttachmentService {
         }
 
         TaskAttachment attachment = new TaskAttachment();
-        attachment.setTask(taskService.getTaskByIdOrThrow(taskId));
+        attachment.setTask(task);
         attachment.setFileName(originalFileName);
         attachment.setFilePath(storedFileName);
         attachment.setContentType(file.getContentType());
         attachment.setSize(file.getSize());
-        attachment.setUploadedAt(LocalDateTime.now());
 
         return attachmentRepository.save(attachment);
     }
